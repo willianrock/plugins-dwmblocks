@@ -1,0 +1,7 @@
+#!/bin/sh
+
+playerctl metadata --follow --format '{{status}} {{title}} {{artist}}' |
+while read -r _; do
+    pkill -RTMIN+2 dwmblocks
+done
+

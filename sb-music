@@ -1,0 +1,37 @@
+#!/bin/sh
+# Display currently playing music.
+# Prioritize Spotify and ignore browser players.
+
+BROWSER_RE='^(firefox|chromium|google-chrome|brave)'
+
+get_player() {
+    if playerctl -l 2>/dev/null | grep -qx 'spotify'; then
+        printf '%s\n' 'spotify'
+        return 0
+    fi
+
+    playerctl -l 2>/dev/null | grep -Ev "$BROWSER_RE" | head -n 1
+}
+
+case "$BLOCK_BUTTON" in
+    1) musicctl prev ;;
+    2) musicctl toggle ;;
+    3) musicctl next ;;
+    4) musicctl seek +5 ;;
+    5) musicctl seek -5 ;;
+    6) terminal -e "$EDITOR" "$0" ;;
+esac
+
+player="$(get_player)"
+[ -n "$player" ] || exit 0
+
+status="$(playerctl --player="$player" --no-messages status)" || exit 0
+case "$status" in
+    Stopped|Paused) exit 0 ;;
+    Playing) icon="󰝚" ;;
+esac
+
+song="$(playerctl --player="$player" metadata --format='{{title}} - {{artist}}')" || exit 0
+
+. sb-theme
+display "$icon $song"
